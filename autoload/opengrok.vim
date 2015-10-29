@@ -62,7 +62,7 @@ function! opengrok#search(type, pattern) abort
             let [path, lnum, text] = cmp[1:3]
 
             let entry = {}
-            let entry.filename = substitute(path, getcwd().'/', '', 'g')
+            let entry.filename = fnamemodify(path, ':.')
             let entry.filepath = path
             let entry.lnum = lnum
             let entry.text = text
