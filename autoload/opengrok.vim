@@ -192,19 +192,6 @@ function! opengrok#og_mode_check_indexed()
     endif
 endfunction
 
-function! s:set_syntax() abort
-    if has("syntax")
-        syn match ogModeComment "^\".*"
-        syn match ogModeNormalLine "^[^\"].*" contains=ogModeJump,ogModeContent
-        syn match ogModeJump '[^:\"]\+:\(\d\+\)\? '
-        syn match ogModeContent '\[.*\]$'
-
-        hi def link ogModeComment Comment
-        hi def link ogModeJump Identifier
-        hi def link ogModeContent Special
-    endif
-endfunction
-
 function! opengrok#og_mode()
     if &insertmode
         return
@@ -220,6 +207,5 @@ function! opengrok#og_mode()
     setlocal nomodifiable nomodified
     call s:set_mappings()
     set filetype=opengrok
-    call s:set_syntax()
     call opengrok#og_mode_clear()
 endfunction
