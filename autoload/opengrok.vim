@@ -111,8 +111,20 @@ endfunction
 "
 " opengrok-mode
 "
-function! opengrok#og_mode_search(type, pattern) abort
-    let results = opengrok#search(a:type, a:pattern)
+function! opengrok#og_mode_search(type) abort
+    let modes = {
+                \ 'f' : 'Full text',
+                \ 'd' : 'Definition',
+                \ 'r' : 'Symbol',
+                \ 'p' : 'Path',
+                \ }
+    let text = get(modes, a:type)
+    let pattern = input(text . ": ")
+    if len(pattern) == 0
+        call opengrok#show_error("Command cancelled")
+        return
+    endif
+    let results = opengrok#search("-" . a:type, pattern)
     let lastline = line('$')
     setlocal modifiable
     let to_append = []
@@ -170,13 +182,13 @@ endfunction
 
 function! s:set_mappings() abort
     nnoremap <buffer> <silent> f
-                \ :call opengrok#og_mode_search('-f', input('Full text: '))<CR>
+                \ :call opengrok#og_mode_search('f')<CR>
     nnoremap <buffer> <silent> d
-                \ :call opengrok#og_mode_search('-d', input('Definition: '))<CR>
+                \ :call opengrok#og_mode_search('d')<CR>
     nnoremap <buffer> <silent> r
-                \ :call opengrok#og_mode_search('-r', input('Symbol: '))<CR>
+                \ :call opengrok#og_mode_search('r')<CR>
     nnoremap <buffer> <silent> p
-                \ :call opengrok#og_mode_search('-p', input('Path: '))<CR>
+                \ :call opengrok#og_mode_search('p')<CR>
     nnoremap <buffer> <silent> c
                 \ :call opengrok#og_mode_clear()<CR>
     nnoremap <buffer> <silent> h
