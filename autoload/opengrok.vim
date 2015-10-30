@@ -145,14 +145,31 @@ function! opengrok#og_mode_search(type) abort
     setlocal nomodifiable
 endfunction
 
-function! opengrok#og_mode_jump() abort
+function! opengrok#og_mode_jump(mode) abort
     let line = getline('.')
     let groups = matchlist(line, '\([^:]\+\):\(\d\+\)\? \[\(.*\)\]$')
     if len(groups) == 0
         return
     endif
     let [path, lnum] = groups[1:2]
-    exe "new " . path
+    if a:mode == 'n'
+        " open in a new window
+        exe "new " . path
+    elseif a:mode == 'o'
+        " open in another window
+        if winnr('$') == 1
+            exe "new " . path
+        else
+            " the path might be relative to the current directory
+            let cwd = getcwd()
+            exe "wincmd p"
+            exec "cd " . cwd
+            exe "edit " . path
+        endif
+    else
+        " open in a current window
+        exe "edit " . path
+    endif
     call cursor(lnum, 0)
 endfunction
 
@@ -160,6 +177,8 @@ let s:og_mode_help_text = [
             \ '" Opengrok Mode',
             \ '" f: full text, d: definition, r: symbol, p: path',
             \ '" c: clear, h: help',
+            \ '" n: open in new window, t: open in this window',
+            \ '" <cr>,o: open in another window',
             \ ]
 
 function! opengrok#og_mode_help() abort
@@ -193,8 +212,16 @@ function! s:set_mappings() abort
                 \ :call opengrok#og_mode_clear()<CR>
     nnoremap <buffer> <silent> h
                 \ :call opengrok#og_mode_help()<CR>
+    nnoremap <buffer><silent> n
+                \ :call opengrok#og_mode_jump('n')<CR>
+    nnoremap <buffer><silent> o
+                \ :call opengrok#og_mode_jump('o')<CR>
+
+    " default action
     nnoremap <buffer><silent> <CR>
-                \ :call opengrok#og_mode_jump()<CR>
+                \ :call opengrok#og_mode_jump('o')<CR>
+    nnoremap <buffer><silent> <2-LeftMouse>
+                \ :call opengrok#og_mode_jump('o')<CR>
 endfunction
 
 function! opengrok#og_mode_check_indexed()
@@ -211,12 +238,6 @@ function! opengrok#og_mode()
         return
     endif
 
-    let b = bufnr(s:og_mode_buf_name)
-    if b != -1
-        execute "buffer " . b
-        return
-    endif
-
     execute "silent keepjumps hide edit" . s:og_mode_buf_name
     setlocal
                 \ buftype=nofile
@@ -227,4 +248,5 @@ function! opengrok#og_mode()
     set filetype=opengrok
     call opengrok#og_mode_clear()
     setlocal nomodifiable nomodified
+    let s:og_mode_running = 1
 endfunction
