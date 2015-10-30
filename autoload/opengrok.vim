@@ -112,6 +112,9 @@ endfunction
 " opengrok-mode
 "
 function! opengrok#og_mode_search(type) abort
+    if opengrok#og_mode_check_indexed() == 0
+        return
+    endif
     let modes = {
                 \ 'f' : 'Full text',
                 \ 'd' : 'Definition',
@@ -125,6 +128,9 @@ function! opengrok#og_mode_search(type) abort
         return
     endif
     let results = opengrok#search("-" . a:type, pattern)
+    if len(results) == 0
+        return
+    endif
     let lastline = line('$')
     setlocal modifiable
     let to_append = []
@@ -242,7 +248,9 @@ function! opengrok#og_mode_check_indexed()
     let root = opengrok#find_index_root_dir()
     if len(root) == 0
         call opengrok#show_error("Current directory not indexed")
+        return 0
     endif
+    return 1
 endfunction
 
 let s:og_mode_buf_name = '[OpenGrok]'
