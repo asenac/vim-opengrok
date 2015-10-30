@@ -146,7 +146,7 @@ endfunction
 
 let s:og_mode_help_text = [
             \ '" Opengrok Mode',
-            \ '" f: full text, d: definition, s: symbol, p: path',
+            \ '" f: full text, d: definition, r: symbol, p: path',
             \ '" c: clear, h: help',
             \ ]
 
