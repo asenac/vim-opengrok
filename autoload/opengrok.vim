@@ -45,11 +45,15 @@ function! opengrok#search(type, pattern) abort
     let root = opengrok#find_index_root_dir()
     if len(root) == 0
         call opengrok#show_error("Current directory not indexed")
-        return
+        return []
     endif
     let params = ["-R " . root . "/" . g:opengrok_cfg,
                 \ a:type, shellescape(a:pattern)]
-    let lines = opengrok#exec(g:opengrok_search_class, params)
+    return opengrok#exec(g:opengrok_search_class, params)
+endfunction
+
+function! opengrok#search_and_populate_loclist(type, pattern) abort
+    let lines = opengrok#search(a:type, a:pattern)
     if len(lines) == 1
         call opengrok#show_error(lines[0])
     else
@@ -88,7 +92,7 @@ function! opengrok#search_command(type, pattern) abort
                     \ join(s:opengrok_allowed_opts, ', '))
         return
     endif
-    call opengrok#search("-" . type, a:pattern)
+    call opengrok#search_and_populate_loclist("-" . type, a:pattern)
 endfunction
 
 function! opengrok#index_dir(dir)
