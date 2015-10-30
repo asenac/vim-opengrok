@@ -113,6 +113,7 @@ endfunction
 "
 function! opengrok#og_mode_search(type, pattern) abort
     let results = opengrok#search(a:type, a:pattern)
+    normal GG
     setlocal modifiable
     call append(line('$'), results)
     setlocal nomodifiable
