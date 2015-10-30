@@ -107,3 +107,55 @@ function! opengrok#reindex()
     endif
     call opengrok#show_error("Not implemented yet!")
 endfunction
+
+"
+" opengrok-mode
+"
+function! opengrok#og_mode_search(type, pattern) abort
+    let results = opengrok#search(a:type, a:pattern)
+    setlocal modifiable
+    call append(line('$'), results)
+    setlocal nomodifiable
+endfunction
+
+function! opengrok#og_mode_jump() abort
+    let line = getline('.')
+    let cmp = matchlist(line, '\([^:]\+\):\(\d\+\)\? \[\(.*\)\]$')
+    if len(cmp) == 0
+        return
+    endif
+    let [path, lnum] = cmp[1:2]
+    exe "new " . path
+    call cursor(lnum, 0)
+endfunction
+
+function! s:set_mappings() abort
+    nnoremap <buffer> <silent> f
+                \ :call opengrok#og_mode_search('-f', input('Full text: '))<CR>
+    nnoremap <buffer> <silent> d
+                \ :call opengrok#og_mode_search('-d', input('Definition: '))<CR>
+    nnoremap <buffer> <silent> r
+                \ :call opengrok#og_mode_search('-r', input('Symbol: '))<CR>
+    nnoremap <buffer> <silent> p
+                \ :call opengrok#og_mode_search('-p', input('Path: '))<CR>
+    nnoremap <buffer><silent> <CR>
+                \ :call opengrok#og_mode_jump()<CR>
+endfunction
+
+function! opengrok#og_mode()
+    if &insertmode
+        return
+    endif
+
+    enew
+
+    setlocal
+                \ buftype=nofile
+                \ nocursorcolumn
+                \ nolist
+                \ noswapfile
+
+    setlocal nomodifiable nomodified
+    call s:set_mappings()
+    set filetype=opengrok
+endfunction
