@@ -59,11 +59,11 @@ function! opengrok#search_and_populate_loclist(type, pattern) abort
     else
         let locations = []
         for line in lines
-            let cmp = matchlist(line, '\([^:]\+\):\(\d\+\)\? \[\(.*\)\]$')
-            if len(cmp) == 0
+            let groups = matchlist(line, '\([^:]\+\):\(\d\+\)\? \[\(.*\)\]$')
+            if len(groups) == 0
                 continue
             endif
-            let [path, lnum, text] = cmp[1:3]
+            let [path, lnum, text] = groups[1:3]
 
             let entry = {}
             let entry.filename = fnamemodify(path, ':.')
@@ -115,17 +115,26 @@ function! opengrok#og_mode_search(type, pattern) abort
     let results = opengrok#search(a:type, a:pattern)
     normal GG
     setlocal modifiable
-    call append(line('$'), results)
+    let to_append = []
+    for line in results
+        let groups = matchlist(line, '\([^:]\+\):\(\d\+\)\? \(.*\)$')
+        if len(groups) != 0
+            let path = fnamemodify(groups[1], ":~:.")
+            let line = path . ":" . groups[2] . " " . groups[3]
+        endif
+        call add(to_append, line)
+    endfor
+    call append(line('$'), to_append)
     setlocal nomodifiable
 endfunction
 
 function! opengrok#og_mode_jump() abort
     let line = getline('.')
-    let cmp = matchlist(line, '\([^:]\+\):\(\d\+\)\? \[\(.*\)\]$')
-    if len(cmp) == 0
+    let groups = matchlist(line, '\([^:]\+\):\(\d\+\)\? \[\(.*\)\]$')
+    if len(groups) == 0
         return
     endif
-    let [path, lnum] = cmp[1:2]
+    let [path, lnum] = groups[1:2]
     exe "new " . path
     call cursor(lnum, 0)
 endfunction
@@ -153,7 +162,6 @@ function! opengrok#og_mode()
     setlocal
                 \ buftype=nofile
                 \ nocursorcolumn
-                \ nolist
                 \ noswapfile
 
     setlocal nomodifiable nomodified
