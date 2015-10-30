@@ -204,13 +204,20 @@ function! opengrok#og_mode_check_indexed()
     endif
 endfunction
 
+let s:og_mode_buf_name = '[OpenGrok]'
+
 function! opengrok#og_mode()
     if &insertmode
         return
     endif
 
-    enew
+    let b = bufnr(s:og_mode_buf_name)
+    if b != -1
+        execute "buffer " . b
+        return
+    endif
 
+    execute "silent keepjumps hide edit" . s:og_mode_buf_name
     setlocal
                 \ buftype=nofile
                 \ nocursorcolumn
