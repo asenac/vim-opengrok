@@ -1,7 +1,6 @@
-if exists('g:syntax_opengrok') || &compatible
-  finish
+if exists("b:current_syntax")
+    finish
 endif
-let g:syntax_opengrok = 1
 
 syn match ogModeComment "^\".*"
 syn match ogModeNormalLine "^[^\"].*" contains=ogModeJump,ogModeContent

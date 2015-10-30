@@ -204,8 +204,8 @@ function! opengrok#og_mode()
                 \ nocursorcolumn
                 \ noswapfile
 
-    setlocal nomodifiable nomodified
     call s:set_mappings()
     set filetype=opengrok
     call opengrok#og_mode_clear()
+    setlocal nomodifiable nomodified
 endfunction
