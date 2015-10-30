@@ -174,29 +174,43 @@ function! opengrok#og_mode_jump(mode) abort
 endfunction
 
 let s:og_mode_help_text = [
-            \ '" Opengrok Mode',
             \ '" f: full text, d: definition, r: symbol, p: path',
             \ '" c: clear, h: help',
             \ '" n: open in new window, t: open in this window',
             \ '" <cr>,o: open in another window',
+            \ '',
             \ ]
+
+function! s:help() abort
+    let lastline = line('$')
+    call append(lastline, s:og_mode_help_text)
+    let root = opengrok#find_index_root_dir()
+    if len(root) == 0
+        let root = "No Index!"
+    endif
+    let headers = [
+                \ '" Opengrok Mode',
+                \ '" Indexed directory: ' . root,
+                \ '" Working directory: ' . getcwd(),
+                \ ]
+    call append(lastline, headers)
+    call cursor(lastline + 1, 0)
+    exec "normal! z\<cr>"
+    call opengrok#og_mode_check_indexed()
+endfunction
 
 function! opengrok#og_mode_help() abort
     setlocal modifiable
-    let lastline = line('$')
-    call append(lastline, s:og_mode_help_text)
-    call cursor(lastline + 1, 0)
-    exec "normal! z\<cr>"
+    call s:help()
     setlocal nomodifiable
-    call opengrok#og_mode_check_indexed()
 endfunction
 
 function! opengrok#og_mode_clear() abort
     setlocal modifiable
     normal! ggVGG"_d
-    call append(0, s:og_mode_help_text)
+    call s:help()
+    exe "1d"
     setlocal nomodifiable
-    call opengrok#og_mode_check_indexed()
 endfunction
 
 function! s:set_mappings() abort
