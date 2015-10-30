@@ -113,7 +113,7 @@ endfunction
 "
 function! opengrok#og_mode_search(type, pattern) abort
     let results = opengrok#search(a:type, a:pattern)
-    normal GG
+    let lastline = line('$')
     setlocal modifiable
     let to_append = []
     for line in results
@@ -121,10 +121,15 @@ function! opengrok#og_mode_search(type, pattern) abort
         if len(groups) != 0
             let path = fnamemodify(groups[1], ":~:.")
             let line = path . ":" . groups[2] . " " . groups[3]
+        else
+            " Display as a commented line
+            let line = '" ' . line
         endif
         call add(to_append, line)
     endfor
     call append(line('$'), to_append)
+    call cursor(lastline + 1, 0)
+    exec "normal! z\<cr>"
     setlocal nomodifiable
 endfunction
 
@@ -139,6 +144,30 @@ function! opengrok#og_mode_jump() abort
     call cursor(lnum, 0)
 endfunction
 
+let s:og_mode_help_text = [
+            \ '" Opengrok Mode',
+            \ '" f: full text, d: definition, s: symbol, p: path',
+            \ '" c: clear, h: help',
+            \ ]
+
+function! opengrok#og_mode_help() abort
+    setlocal modifiable
+    let lastline = line('$')
+    call append(lastline, s:og_mode_help_text)
+    call cursor(lastline + 1, 0)
+    exec "normal! z\<cr>"
+    setlocal nomodifiable
+    call opengrok#og_mode_check_indexed()
+endfunction
+
+function! opengrok#og_mode_clear() abort
+    setlocal modifiable
+    normal! ggVGG"_d
+    call append(0, s:og_mode_help_text)
+    setlocal nomodifiable
+    call opengrok#og_mode_check_indexed()
+endfunction
+
 function! s:set_mappings() abort
     nnoremap <buffer> <silent> f
                 \ :call opengrok#og_mode_search('-f', input('Full text: '))<CR>
@@ -148,8 +177,32 @@ function! s:set_mappings() abort
                 \ :call opengrok#og_mode_search('-r', input('Symbol: '))<CR>
     nnoremap <buffer> <silent> p
                 \ :call opengrok#og_mode_search('-p', input('Path: '))<CR>
+    nnoremap <buffer> <silent> c
+                \ :call opengrok#og_mode_clear()<CR>
+    nnoremap <buffer> <silent> h
+                \ :call opengrok#og_mode_help()<CR>
     nnoremap <buffer><silent> <CR>
                 \ :call opengrok#og_mode_jump()<CR>
+endfunction
+
+function! opengrok#og_mode_check_indexed()
+    let root = opengrok#find_index_root_dir()
+    if len(root) == 0
+        call opengrok#show_error("Current directory not indexed")
+    endif
+endfunction
+
+function! s:set_syntax() abort
+    if has("syntax")
+        syn match ogModeComment "^\".*"
+        syn match ogModeNormalLine "^[^\"].*" contains=ogModeJump,ogModeContent
+        syn match ogModeJump '[^:\"]\+:\(\d\+\)\? '
+        syn match ogModeContent '\[.*\]$'
+
+        hi def link ogModeComment Comment
+        hi def link ogModeJump Identifier
+        hi def link ogModeContent Special
+    endif
 endfunction
 
 function! opengrok#og_mode()
@@ -167,4 +220,6 @@ function! opengrok#og_mode()
     setlocal nomodifiable nomodified
     call s:set_mappings()
     set filetype=opengrok
+    call s:set_syntax()
+    call opengrok#og_mode_clear()
 endfunction
