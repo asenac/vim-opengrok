@@ -12,7 +12,8 @@ let s:opengrok_allowed_opts = [ "d", "r", "p", "h", "f", "t"]
 let s:opengrok_latest_version =
             \ 'http://java.net/projects/opengrok/downloads/download/opengrok-0.12.1.tar.gz'
 let s:opengrok_ignored_dir = [
-            \ "CVS", ".hg", ".bzr", ".svn",
+            \ "CVS", ".hg", ".bzr", ".svn", "build",
+            \ "*.o", "*.jar", "*.so", "*.a", "*.jar", "*.class",
             \ ".opengrok" ]
 
 " Configuration options
@@ -136,10 +137,15 @@ function! opengrok#index_dir(dir)
                 \ "-C", "-S", "-H"
                 \]
     for ignored in s:opengrok_ignored_dir
-        call extend(params, ["-i", ignored])
+        call extend(params, ["-i", shellescape(ignored)])
     endfor
     echomsg "Indexing " . dir
-    echomsg join(opengrok#exec(s:opengrok_indexer_class, params), "\n")
+    let output = opengrok#exec(s:opengrok_indexer_class, params)
+    if len(output)
+        echomsg join(output, "\n")
+    else
+        echomsg "Index complete"
+    endif
 endfunction
 
 function! opengrok#reindex()
