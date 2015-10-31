@@ -15,6 +15,9 @@ let s:opengrok_ignored_dir = [
             \ "CVS", ".hg", ".bzr", ".svn", "build",
             \ "*.o", "*.jar", "*.so", "*.a", "*.jar", "*.class",
             \ ".opengrok" ]
+let s:opengrok_ctags =
+            \ fnamemodify(get(g:, "opengrok_ctags", "/usr/local/bin/ctags"), ":p")
+let s:opengrok_java = get(g:, "opengrok_java", "java")
 
 " Configuration options
 if !exists('g:opengrok_default_options')
@@ -51,7 +54,8 @@ function! opengrok#find_index_root_dir()
 endfunction
 
 function! opengrok#exec(class, params) abort
-    let cmd = "java " . g:opengrok_default_options .
+    let cmd = s:opengrok_java .
+                \ " " . g:opengrok_default_options .
                 \ " -cp " . g:opengrok_jar .
                 \ " " . a:class
     for param in a:params
@@ -128,7 +132,7 @@ function! opengrok#index_dir(dir)
     let params = [
                 \ "-q",
                 \ "-c",
-                \ "/usr/local/bin/ctags",
+                \ shellescape(s:opengrok_ctags),
                 \ "-W",
                 \ shellescape(dir . '/' . s:opengrok_cfg),
                 \ "-d",

@@ -15,6 +15,8 @@ Configuration
 
     let g:opengrok_jar = '/path/to/opengrok/lib/opengrok.jar'
 
+    let g:opengrok_ctags = '/path/to/ctags'
+
 Commands
 --------
 
