@@ -3,15 +3,32 @@ if exists('g:autoloaded_opengrok') || &compatible
 endif
 let g:autoloaded_opengrok = 1
 
-let g:opengrok_index_dir = '.opengrok'
-let g:opengrok_cfg = '.opengrok/configuration.xml'
-let g:opengrok_jar = '~/local/opengrok-0.12.1/lib/opengrok.jar'
-let g:opengrok_indexer_class = 'org.opensolaris.opengrok.index.Indexer'
+" Internal options
+let s:opengrok_index_dir = '.opengrok'
+let s:opengrok_cfg = '.opengrok/configuration.xml'
+let s:opengrok_indexer_class = 'org.opensolaris.opengrok.index.Indexer'
 let g:opengrok_search_class = 'org.opensolaris.opengrok.search.Search'
-let g:opengrok_default_opts = '-Xmx2048m'
 let s:opengrok_allowed_opts = [ "d", "r", "p", "h", "f", "t"]
+let s:opengrok_latest_version =
+            \ 'http://java.net/projects/opengrok/downloads/download/opengrok-0.12.1.tar.gz'
 
-function! opengrok#show_error(msg)
+" Configuration options
+if !exists('g:opengrok_default_options')
+    let g:opengrok_default_options = '-Xmx2048m'
+endif
+
+function! s:check_opengrok_jar()
+    if !exists('g:opengrok_jar')
+        call s:show_error("g:opengrok_jar is not defined!")
+        return 0
+    elseif !filereadable(fnamemodify(g:opengrok_jar, ':p'))
+        call s:show_error(g:opengrok_jar . " does not exist!")
+        return 0
+    endif
+    return 1
+endfunction
+
+function! s:show_error(msg)
     echohl ErrorMsg
     echomsg "[vim-opengrok] " . a:msg
     echohl None
@@ -19,7 +36,7 @@ endfunction
 
 function! opengrok#find_index_root_dir()
     let dir = expand('%:p:h')
-    while !filereadable(dir . '/' . g:opengrok_cfg)
+    while !filereadable(dir . '/' . s:opengrok_cfg)
         let ndir = fnamemodify(dir, ':h')
         if ndir == dir
             return ''
@@ -30,7 +47,7 @@ function! opengrok#find_index_root_dir()
 endfunction
 
 function! opengrok#exec(class, params) abort
-    let cmd = "java " . g:opengrok_default_opts .
+    let cmd = "java " . g:opengrok_default_options .
                 \ " -cp " . g:opengrok_jar .
                 \ " " . a:class
     for param in a:params
@@ -44,10 +61,10 @@ endfunction
 function! opengrok#search(type, pattern) abort
     let root = opengrok#find_index_root_dir()
     if len(root) == 0
-        call opengrok#show_error("Current directory not indexed")
+        call s:show_error("Current directory not indexed")
         return []
     endif
-    let params = ["-R " . root . "/" . g:opengrok_cfg,
+    let params = ["-R " . root . "/" . s:opengrok_cfg,
                 \ a:type, shellescape(a:pattern)]
     return opengrok#exec(g:opengrok_search_class, params)
 endfunction
@@ -55,7 +72,7 @@ endfunction
 function! opengrok#search_and_populate_loclist(type, pattern) abort
     let lines = opengrok#search(a:type, a:pattern)
     if len(lines) == 1
-        call opengrok#show_error(lines[0])
+        call s:show_error(lines[0])
     else
         let locations = []
         for line in lines
@@ -82,12 +99,15 @@ function! opengrok#search_and_populate_loclist(type, pattern) abort
 endfunction
 
 function! opengrok#search_command(type, pattern) abort
+    if !s:check_opengrok_jar()
+        return
+    endif
     let type = a:type
     if len(type) == 0
         let type = "f"
     endif
     if index(s:opengrok_allowed_opts, type) == -1
-        call opengrok#show_error("Invalid mode '" . type .
+        call s:show_error("Invalid mode '" . type .
                     \ "'. Use one of the following: " .
                     \ join(s:opengrok_allowed_opts, ', '))
         return
@@ -96,23 +116,29 @@ function! opengrok#search_command(type, pattern) abort
 endfunction
 
 function! opengrok#index_dir(dir)
-    call opengrok#show_error("Not implemented yet!")
+    if !s:check_opengrok_jar()
+        return
+    endif
+    call s:show_error("Not implemented yet!")
 endfunction
 
 function! opengrok#reindex()
-    let root = opengrok#find_index_root_dir()
-    if len(root) == 0
-        call opengrok#show_error("Current directory not indexed")
+    if !s:check_opengrok_jar()
         return
     endif
-    call opengrok#show_error("Not implemented yet!")
+    let root = opengrok#find_index_root_dir()
+    if len(root) == 0
+        call s:show_error("Current directory not indexed")
+        return
+    endif
+    call s:show_error("Not implemented yet!")
 endfunction
 
 "
 " opengrok-mode
 "
 function! opengrok#og_mode_search(type) abort
-    if opengrok#og_mode_check_indexed() == 0
+    if !s:check_opengrok_jar() || !s:check_indexed()
         return
     endif
     let modes = {
@@ -124,7 +150,7 @@ function! opengrok#og_mode_search(type) abort
     let text = get(modes, a:type)
     let pattern = input(text . ": ")
     if len(pattern) == 0
-        call opengrok#show_error("Command cancelled")
+        call s:show_error("Command cancelled")
         return
     endif
     let results = opengrok#search("-" . a:type, pattern)
@@ -202,7 +228,7 @@ function! s:help() abort
     call append(lastline, headers)
     call cursor(lastline + 1, 0)
     exec "normal! z\<cr>"
-    call opengrok#og_mode_check_indexed()
+    call s:check_indexed()
 endfunction
 
 function! opengrok#og_mode_help() abort
@@ -244,10 +270,10 @@ function! s:set_mappings() abort
                 \ :call opengrok#og_mode_jump('o')<CR>
 endfunction
 
-function! opengrok#og_mode_check_indexed()
+function! s:check_indexed()
     let root = opengrok#find_index_root_dir()
     if len(root) == 0
-        call opengrok#show_error("Current directory not indexed")
+        call s:show_error("Current directory not indexed")
         return 0
     endif
     return 1
@@ -256,7 +282,7 @@ endfunction
 let s:og_mode_buf_name = '[OpenGrok]'
 
 function! opengrok#og_mode()
-    if &insertmode
+    if &insertmode || !s:check_opengrok_jar()
         return
     endif
 
