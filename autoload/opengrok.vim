@@ -160,6 +160,16 @@ function! opengrok#reindex()
     call opengrok#index_dir(root)
 endfunction
 
+function! s:remove_html(text)
+    let text = a:text
+    let text = substitute(text, "<b>", "", "g")
+    let text = substitute(text, "</b>", "", "g")
+    let text = substitute(text, "&gt;", ">", "g")
+    let text = substitute(text, "&lt;", "<", "g")
+    let text = substitute(text, "&amp;", "\\&", "g")
+    return text
+endfunction
+
 "
 " opengrok-mode
 "
@@ -187,10 +197,10 @@ function! opengrok#og_mode_search(type) abort
     setlocal modifiable
     let to_append = []
     for line in results
-        let groups = matchlist(line, '\([^:]\+\):\(\d\+\)\? \(.*\)$')
+        let groups = matchlist(line, '\([^:]\+\):\(\d\+\)\? \[\(.*\)\]$')
         if len(groups) != 0
             let path = fnamemodify(groups[1], ":~:.")
-            let line = path . ":" . groups[2] . " " . groups[3]
+            let line = path . ":" . groups[2] . " " . s:remove_html(groups[3])
         else
             " Display as a commented line
             let line = '" ' . line
@@ -205,7 +215,7 @@ endfunction
 
 function! opengrok#og_mode_jump(mode) abort
     let line = getline('.')
-    let groups = matchlist(line, '\([^:]\+\):\(\d\+\)\? \[\(.*\)\]$')
+    let groups = matchlist(line, '\([^:]\+\):\(\d\+\)\? \(.*\)$')
     if len(groups) == 0
         return
     endif
@@ -233,8 +243,8 @@ endfunction
 
 let s:og_mode_help_text = [
             \ '" f: full text, d: definition, r: symbol, p: path',
-            \ '" c: clear, h: help',
-            \ '" n: open in new window, t: open in this window',
+            \ '" c: clear, ?: help',
+            \ '" h: open in new window, t: open in this window',
             \ '" <cr>,o: open in another window',
             \ '',
             \ ]
@@ -282,10 +292,10 @@ function! s:set_mappings() abort
                 \ :call opengrok#og_mode_search('p')<CR>
     nnoremap <buffer> <silent> c
                 \ :call opengrok#og_mode_clear()<CR>
-    nnoremap <buffer> <silent> h
+    nnoremap <buffer> <silent> ?
                 \ :call opengrok#og_mode_help()<CR>
-    nnoremap <buffer><silent> n
-                \ :call opengrok#og_mode_jump('n')<CR>
+    nnoremap <buffer><silent> h
+                \ :call opengrok#og_mode_jump('h')<CR>
     nnoremap <buffer><silent> o
                 \ :call opengrok#og_mode_jump('o')<CR>
 
