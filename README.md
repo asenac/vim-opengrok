@@ -21,6 +21,9 @@ Requeriments
 - Opengrok
   [https://github.com/OpenGrok/OpenGrok/releases](https://github.com/OpenGrok/OpenGrok/releases)
 
+Note: vim-opengrok uses opengrok's command line tools but it does not require to
+have opengrok's web application deployed.
+
 Configuration
 -------------
 
