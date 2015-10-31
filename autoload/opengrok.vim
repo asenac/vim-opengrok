@@ -327,6 +327,7 @@ function! opengrok#og_mode()
                 \ buftype=nofile
                 \ nocursorcolumn
                 \ noswapfile
+                \ nowrap
 
     call s:set_mappings()
     set filetype=opengrok
