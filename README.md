@@ -30,7 +30,13 @@ Updates the index that contains the current directory.
 
     :OgSearch [f|d|r|p]
 
-Searches in the index and displays the results in Vim's location list.
+Searches in the index and displays the results in Vim's location list. A prompt
+is displayed to introduce the text to search. Supported queries:
+
+     * d - Symbol Definitions
+     * r - Symbol References
+     * p - Path
+     * f - Full text
 
     :OgSearchCWord
 
