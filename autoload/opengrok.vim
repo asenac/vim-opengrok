@@ -7,10 +7,13 @@ let g:autoloaded_opengrok = 1
 let s:opengrok_index_dir = '.opengrok'
 let s:opengrok_cfg = '.opengrok/configuration.xml'
 let s:opengrok_indexer_class = 'org.opensolaris.opengrok.index.Indexer'
-let g:opengrok_search_class = 'org.opensolaris.opengrok.search.Search'
+let s:opengrok_search_class = 'org.opensolaris.opengrok.search.Search'
 let s:opengrok_allowed_opts = [ "d", "r", "p", "h", "f", "t"]
 let s:opengrok_latest_version =
             \ 'http://java.net/projects/opengrok/downloads/download/opengrok-0.12.1.tar.gz'
+let s:opengrok_ignored_dir = [
+            \ "CVS", ".hg", ".bzr", ".svn",
+            \ ".opengrok" ]
 
 " Configuration options
 if !exists('g:opengrok_default_options')
@@ -53,6 +56,7 @@ function! opengrok#exec(class, params) abort
     for param in a:params
         let cmd .= " " . param
     endfor
+    "echomsg cmd
     " Note: As opengrok does not have a non-interactive mode
     " we will display only the first page of results
     return systemlist(cmd, "n")
@@ -66,7 +70,7 @@ function! opengrok#search(type, pattern) abort
     endif
     let params = ["-R " . root . "/" . s:opengrok_cfg,
                 \ a:type, shellescape(a:pattern)]
-    return opengrok#exec(g:opengrok_search_class, params)
+    return opengrok#exec(s:opengrok_search_class, params)
 endfunction
 
 function! opengrok#search_and_populate_loclist(type, pattern) abort
@@ -119,7 +123,23 @@ function! opengrok#index_dir(dir)
     if !s:check_opengrok_jar()
         return
     endif
-    call s:show_error("Not implemented yet!")
+    let dir = fnamemodify(a:dir, ':p')
+    let params = [
+                \ "-q",
+                \ "-c",
+                \ "/usr/local/bin/ctags",
+                \ "-W",
+                \ shellescape(dir . '/' . s:opengrok_cfg),
+                \ "-d",
+                \ shellescape(dir . '/' . s:opengrok_index_dir),
+                \ "-s", dir,
+                \ "-C", "-S", "-H"
+                \]
+    for ignored in s:opengrok_ignored_dir
+        call extend(params, ["-i", ignored])
+    endfor
+    echomsg "Indexing " . dir
+    echomsg join(opengrok#exec(s:opengrok_indexer_class, params), "\n")
 endfunction
 
 function! opengrok#reindex()
@@ -131,7 +151,7 @@ function! opengrok#reindex()
         call s:show_error("Current directory not indexed")
         return
     endif
-    call s:show_error("Not implemented yet!")
+    call opengrok#index_dir(root)
 endfunction
 
 "
