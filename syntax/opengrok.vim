@@ -5,30 +5,25 @@ endif
 syn match ogModeComment "^\".*"
 syn match ogModeLoc '[^:\"]\+:\(\d\+\)\? '
 
-" Special cases
-syn include @Cpp syntax/cpp.vim
-unlet b:current_syntax
-syn include @Java syntax/java.vim
-unlet b:current_syntax
-syn include @Python syntax/python.vim
-unlet b:current_syntax
-syn include @Make syntax/make.vim
-unlet b:current_syntax
-syn include @CMake syntax/cmake.vim
-unlet b:current_syntax
-syn include @Ant syntax/ant.vim
-unlet b:current_syntax
-syn include @Sh syntax/sh.vim
-unlet b:current_syntax
+let embedded_syntax = [
+            \ ["cpp",        "\\.[ch]\\(pp\\|xx\\)\\?"],
+            \ ["java",       "\\.java"],
+            \ ["javascript", "\\.js"],
+            \ ["python",     "\\.py"],
+            \ ["perl",       "\\.pl"],
+            \ ["sh",         "\\.sh"],
+            \ ["cmake",      "\\(\\.cmake\\|\/CMakeLists.txt\\)"],
+            \ ["make",       "[Mm]akefile"],
+            \ ["ant",        "build.xml"],
+            \]
 
-syntax region ogModeCpp matchgroup=ogModeLoc keepend start=+^[^\"].*\.[ch]\(pp\|xx\)\?:\d* + end=+$+ contains=@Cpp
-syntax region ogModeJava matchgroup=ogModeLoc keepend start=+^[^\"].*\.java:\d* + end=+$+ contains=@Java
-syntax region ogModePython matchgroup=ogModeLoc keepend start=+^[^\"].*\.py:\d* + end=+$+ contains=@Python
-syntax region ogModeMake matchgroup=ogModeLoc keepend start=+^[^\"].*\(GNU\)\?[Mm]akefile:\d* + end=+$+ contains=@Make
-syntax region ogModeCMake0 matchgroup=ogModeLoc keepend start=+^[^\"].*\/CMakeLists.txt:\d* + end=+$+ contains=@CMake
-syntax region ogModeCMake1 matchgroup=ogModeLoc keepend start=+^[^\"].*\.cmake:\d* + end=+$+ contains=@CMake
-syntax region ogModeAnt matchgroup=ogModeLoc keepend start=+^[^\"].*\/build.xml:\d* + end=+$+ contains=@Ant
-syntax region ogModeSh matchgroup=ogModeLoc keepend start=+^[^\"].*\.sh:\d* + end=+$+ contains=@Sh
+for [s, r] in embedded_syntax
+    exec "syn include @".s." syntax/".s.".vim"
+    unlet b:current_syntax
+    exe "syntax region ogMode".s." matchgroup=ogModeLoc keepend "
+                \."start=+^[^\\\"].*".r.":\\d* + "
+                \."end=+$+ contains=@".s
+endfor
 
 hi def link ogModeComment Comment
 hi link ogModeLoc Identifier
