@@ -18,6 +18,8 @@ syn include @CMake syntax/cmake.vim
 unlet b:current_syntax
 syn include @Ant syntax/ant.vim
 unlet b:current_syntax
+syn include @Sh syntax/sh.vim
+unlet b:current_syntax
 
 syntax region ogModeCpp matchgroup=ogModeLoc keepend start=+^[^\"].*\.[ch]\(pp\|xx\)\?:\d* + end=+$+ contains=@Cpp
 syntax region ogModeJava matchgroup=ogModeLoc keepend start=+^[^\"].*\.java:\d* + end=+$+ contains=@Java
@@ -26,6 +28,7 @@ syntax region ogModeMake matchgroup=ogModeLoc keepend start=+^[^\"].*\(GNU\)\?[M
 syntax region ogModeCMake0 matchgroup=ogModeLoc keepend start=+^[^\"].*\/CMakeLists.txt:\d* + end=+$+ contains=@CMake
 syntax region ogModeCMake1 matchgroup=ogModeLoc keepend start=+^[^\"].*\.cmake:\d* + end=+$+ contains=@CMake
 syntax region ogModeAnt matchgroup=ogModeLoc keepend start=+^[^\"].*\/build.xml:\d* + end=+$+ contains=@Ant
+syntax region ogModeSh matchgroup=ogModeLoc keepend start=+^[^\"].*\.sh:\d* + end=+$+ contains=@Sh
 
 hi def link ogModeComment Comment
 hi link ogModeLoc Identifier
