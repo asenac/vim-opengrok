@@ -19,7 +19,7 @@ unlet b:current_syntax
 syn include @Ant syntax/ant.vim
 unlet b:current_syntax
 
-syntax region ogModeCpp matchgroup=ogModeLoc keepend start=+^[^\"].*\.[ch]\(pp\)\?:\d* + end=+$+ contains=@Cpp
+syntax region ogModeCpp matchgroup=ogModeLoc keepend start=+^[^\"].*\.[ch]\(pp\|xx\)\?:\d* + end=+$+ contains=@Cpp
 syntax region ogModeJava matchgroup=ogModeLoc keepend start=+^[^\"].*\.java:\d* + end=+$+ contains=@Java
 syntax region ogModePython matchgroup=ogModeLoc keepend start=+^[^\"].*\.py:\d* + end=+$+ contains=@Python
 syntax region ogModeMake matchgroup=ogModeLoc keepend start=+^[^\"].*\(GNU\)\?[Mm]akefile:\d* + end=+$+ contains=@Make
