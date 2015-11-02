@@ -95,7 +95,7 @@ function! opengrok#search_and_populate_loclist(type, pattern) abort
             let entry.filename = fnamemodify(path, ':.')
             let entry.filepath = path
             let entry.lnum = lnum
-            let entry.text = text
+            let entry.text = s:remove_html(text)
 
             call add(locations, entry)
         endfor
