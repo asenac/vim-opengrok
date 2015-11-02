@@ -114,6 +114,8 @@ function! opengrok#search_command(type, pattern) abort
     let type = a:type
     if len(type) == 0
         let type = "f"
+    elseif len(type) > 1
+        let type = type[0]
     endif
     if index(s:opengrok_allowed_opts, type) == -1
         call s:show_error("Invalid mode '" . type .
@@ -172,6 +174,10 @@ function! s:remove_html(text)
     let text = substitute(text, "&lt;", "<", "g")
     let text = substitute(text, "&amp;", "\\&", "g")
     return text
+endfunction
+
+function! opengrok#complete_search_mode(arg, line, pos)
+    return ["fulltext", "definition", "reference", "path"]
 endfunction
 
 "
