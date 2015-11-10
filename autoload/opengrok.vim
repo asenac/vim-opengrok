@@ -96,6 +96,7 @@ function! opengrok#search_and_populate_loclist(type, pattern) abort
             let entry.filepath = path
             let entry.lnum = lnum
             let entry.text = s:remove_html(text)
+            let entry.col = s:get_match_column(text)
 
             call add(locations, entry)
         endfor
@@ -174,6 +175,18 @@ function! s:remove_html(text)
     let text = substitute(text, "&lt;", "<", "g")
     let text = substitute(text, "&amp;", "\\&", "g")
     return text
+endfunction
+
+function! s:get_match_column(text)
+    let col = 1
+    let idx = stridx(a:text, "<b>")
+    if idx > -1
+        let text = strpart(a:text, 0, idx)
+        let text = s:remove_html(text)
+        " col is 1-index
+        let col += strlen(text)
+    endif
+    return col
 endfunction
 
 function! opengrok#complete_search_mode(arg, line, pos)
