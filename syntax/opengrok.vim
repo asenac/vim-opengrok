@@ -8,25 +8,30 @@ syn match ogModePath '^\f\+'
 syn match ogModeInfo '|\(\d\+ col \d\+\)\?| '
 syn match ogModeLoc '^\f\+|\(\d\+ col \d\+\)\?| ' contains=OgModePath,ogModeInfo
 
-let embedded_syntax = [
-            \ ["cpp",        "\\.[ch]\\(pp\\|xx\\)\\?"],
-            \ ["java",       "\\.java"],
-            \ ["javascript", "\\.js"],
-            \ ["python",     "\\.py"],
-            \ ["perl",       "\\.pl"],
-            \ ["sh",         "\\.sh"],
-            \ ["cmake",      "\\(\\.cmake\\|CMakeLists.txt\\)"],
-            \ ["make",       "[Mm]akefile"],
-            \ ["ant",        "build.xml"],
-            \]
+let s:opengrok_use_embedded_syntax =
+            \ get(g:, "opengrok_use_embedded_syntax", 1)
 
-for [s, r] in embedded_syntax
-    exec "syn include @".s." syntax/".s.".vim"
-    unlet b:current_syntax
-    exe "syntax region ogMode".s." keepend "
-                \."start=+^\\f*".r."|\\(\\d\\+ col \\d\\+\\)| + "
-                \."end=+$+ contains=ogModeLoc,@".s
-endfor
+if s:opengrok_use_embedded_syntax
+    let embedded_syntax = [
+                \ ["cpp",        "\\.[ch]\\(pp\\|xx\\)\\?"],
+                \ ["java",       "\\.java"],
+                \ ["javascript", "\\.js"],
+                \ ["python",     "\\.py"],
+                \ ["perl",       "\\.pl"],
+                \ ["sh",         "\\.sh"],
+                \ ["cmake",      "\\(\\.cmake\\|CMakeLists.txt\\)"],
+                \ ["make",       "[Mm]akefile"],
+                \ ["ant",        "build.xml"],
+                \]
+
+    for [s, r] in embedded_syntax
+        exec "syn include @".s." syntax/".s.".vim"
+        unlet b:current_syntax
+        exe "syntax region ogMode".s." keepend "
+                    \."start=+^\\f*".r."|\\(\\d\\+ col \\d\\+\\)| + "
+                    \."end=+$+ contains=ogModeLoc,@".s
+    endfor
+endif
 
 hi def link ogModeComment Comment
 hi link ogModePath Identifier
