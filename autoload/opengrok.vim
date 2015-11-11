@@ -358,7 +358,14 @@ function! opengrok#og_mode()
         return
     endif
 
-    execute "silent keepjumps hide edit" . s:og_mode_buf_name
+    let name = s:og_mode_buf_name
+
+    if !has("win32")
+        " On non-Windows boxes, escape the name so that is shows up correctly.
+        let name = escape(name, "[]")
+    endif
+
+    execute "silent keepjumps hide edit" . name
     setlocal
                 \ buftype=nofile
                 \ nocursorcolumn
