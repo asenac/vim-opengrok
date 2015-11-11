@@ -18,6 +18,8 @@ let s:opengrok_ignored_dir = [
 let s:opengrok_ctags =
             \ fnamemodify(get(g:, "opengrok_ctags", "/usr/local/bin/ctags"), ":p")
 let s:opengrok_java = get(g:, "opengrok_java", "java")
+let s:opengrok_use_embedded_syntax =
+            \ get(g:, "opengrok_use_embedded_syntax", 1)
 
 " Configuration options
 if !exists('g:opengrok_default_options')
@@ -229,7 +231,12 @@ function! opengrok#og_mode_search(type) abort
                 let col = s:get_match_column(groups[3])
                 let line .= lnum . ' col ' . col
             endif
-            let line .= '| ' . s:remove_html(groups[3])
+            let line .= '| '
+            if s:opengrok_use_embedded_syntax
+                let line .= s:remove_html(groups[3])
+            else
+                let line .= groups[3]
+            endif
         else
             " Display as a commented line
             let line = '" ' . line
