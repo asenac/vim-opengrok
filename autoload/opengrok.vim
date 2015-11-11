@@ -223,7 +223,13 @@ function! opengrok#og_mode_search(type) abort
         let groups = matchlist(line, '\([^:]\+\):\(\d\+\)\? \[\(.*\)\]$')
         if len(groups) != 0
             let path = fnamemodify(groups[1], ":~:.")
-            let line = path . ":" . groups[2] . " " . s:remove_html(groups[3])
+            let lnum = groups[2]
+            let line = path . '|'
+            if lnum
+                let col = s:get_match_column(groups[3])
+                let line .= lnum . ' col ' . col
+            endif
+            let line .= '| ' . s:remove_html(groups[3])
         else
             " Display as a commented line
             let line = '" ' . line
@@ -238,11 +244,11 @@ endfunction
 
 function! opengrok#og_mode_jump(mode) abort
     let line = getline('.')
-    let groups = matchlist(line, '\([^:]\+\):\(\d\+\)\? \(.*\)$')
+    let groups = matchlist(line, '\([^:]\+\)|\(\(\d\+\) col \(\d\+\)\)\?| \(.*\)$')
     if len(groups) == 0
         return
     endif
-    let [path, lnum] = groups[1:2]
+    let [path, _, lnum, col] = groups[1:4]
     if a:mode == 'n'
         " open in a new window
         exe "new " . path
@@ -261,7 +267,7 @@ function! opengrok#og_mode_jump(mode) abort
         " open in a current window
         exe "edit " . path
     endif
-    call cursor(lnum, 0)
+    call cursor(lnum, col)
 endfunction
 
 let s:og_mode_help_text = [
