@@ -3,7 +3,10 @@ if exists("b:current_syntax")
 endif
 
 syn match ogModeComment "^\".*"
-syn match ogModeLoc '^\f\+|\(\d\+ col \d\+\)\?| '
+
+syn match ogModePath '^\f\+'
+syn match ogModeInfo '|\(\d\+ col \d\+\)\?| '
+syn match ogModeLoc '^\f\+|\(\d\+ col \d\+\)\?| ' contains=OgModePath,ogModeInfo
 
 let embedded_syntax = [
             \ ["cpp",        "\\.[ch]\\(pp\\|xx\\)\\?"],
@@ -20,12 +23,13 @@ let embedded_syntax = [
 for [s, r] in embedded_syntax
     exec "syn include @".s." syntax/".s.".vim"
     unlet b:current_syntax
-    exe "syntax region ogMode".s." matchgroup=ogModeLoc keepend "
+    exe "syntax region ogMode".s." keepend "
                 \."start=+^\\f*".r."|\\(\\d\\+ col \\d\\+\\)| + "
-                \."end=+$+ contains=@".s
+                \."end=+$+ contains=ogModeLoc,@".s
 endfor
 
 hi def link ogModeComment Comment
-hi link ogModeLoc Identifier
+hi link ogModePath Identifier
+hi link ogModeInfo Comment
 
 let b:current_syntax = "opengrok"
