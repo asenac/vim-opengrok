@@ -353,18 +353,26 @@ endfunction
 
 let s:og_mode_buf_name = '[OpenGrok]'
 
+function s:get_buf_name()
+    let name = s:og_mode_buf_name
+    if !has("win32")
+        " On non-Windows boxes, escape the name so that is shows up correctly.
+        let name = escape(name, "[]")
+    endif
+    return name
+endfunction
+
+function s:buf_enter()
+    set filetype=opengrok
+    call opengrok#og_mode_clear()
+endfunction
+
 function! opengrok#og_mode()
     if &insertmode || !s:check_opengrok_jar()
         return
     endif
 
-    let name = s:og_mode_buf_name
-
-    if !has("win32")
-        " On non-Windows boxes, escape the name so that is shows up correctly.
-        let name = escape(name, "[]")
-    endif
-
+    let name = s:get_buf_name()
     execute "silent keepjumps hide edit" . name
     setlocal
                 \ buftype=nofile
@@ -373,8 +381,13 @@ function! opengrok#og_mode()
                 \ nowrap
 
     call s:set_mappings()
-    set filetype=opengrok
-    call opengrok#og_mode_clear()
+    call s:buf_enter()
     setlocal nomodifiable nomodified
     let s:og_mode_running = 1
 endfunction
+
+aug OpengrokAug
+    au!
+    exe "au BufEnter " . s:get_buf_name() . " call s:buf_enter()"
+aug END
+
