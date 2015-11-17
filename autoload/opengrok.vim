@@ -364,7 +364,9 @@ endfunction
 
 function s:buf_enter()
     set filetype=opengrok
-    call opengrok#og_mode_clear()
+    if line('$') == 1 && col('$') == 1
+        call opengrok#og_mode_clear()
+    endif
 endfunction
 
 function! opengrok#og_mode()
