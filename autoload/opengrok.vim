@@ -70,11 +70,10 @@ function! opengrok#exec(class, params) abort
 endfunction
 
 function! opengrok#search(type, pattern) abort
-    let root = opengrok#find_index_root_dir()
-    if len(root) == 0
-        call s:show_error("Current directory not indexed")
+    if !s:check_indexed()
         return []
     endif
+    let root = opengrok#find_index_root_dir()
     let params = ["-R " . root . "/" . s:opengrok_cfg,
                 \ a:type, shellescape(a:pattern)]
     return opengrok#exec(s:opengrok_search_class, params)
@@ -158,14 +157,10 @@ function! opengrok#index_dir(dir)
 endfunction
 
 function! opengrok#reindex()
-    if !s:check_opengrok_jar()
+    if !s:check_opengrok_jar() || !s:check_indexed()
         return
     endif
     let root = opengrok#find_index_root_dir()
-    if len(root) == 0
-        call s:show_error("Current directory not indexed")
-        return
-    endif
     call opengrok#index_dir(root)
 endfunction
 
@@ -345,7 +340,9 @@ endfunction
 function! s:check_indexed()
     let root = opengrok#find_index_root_dir()
     if len(root) == 0
-        call s:show_error("Current directory not indexed")
+        call s:show_error("Current directory not indexed. "
+                    \ . "Use :OgIndex command to create the index in "
+                    \ . "the root directory of your project")
         return 0
     endif
     return 1
