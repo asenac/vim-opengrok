@@ -7,7 +7,7 @@ syn match ogmPath contained '^\f\+'
 syn match ogmInfo contained '|\(\d\+ col \d\+\)\?| '
 
 let s:opengrok_use_embedded_syntax =
-            \ get(g:, "opengrok_use_embedded_syntax", 1)
+            \ get(g:, "opengrok_use_embedded_syntax", 0)
 
 if s:opengrok_use_embedded_syntax
     syn match ogmLoc '^\f\+|\(\d\+ col \d\+\)\?| ' contains=ogmPath,ogmInfo
