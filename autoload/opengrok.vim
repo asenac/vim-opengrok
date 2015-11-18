@@ -43,7 +43,7 @@ function! s:show_error(msg)
     echohl None
 endfunction
 
-function! opengrok#find_index_root_dir()
+function! s:find_index_root_dir()
     let dir = expand('%:p:h')
     while !filereadable(dir . '/' . s:opengrok_cfg)
         let ndir = fnamemodify(dir, ':h')
@@ -70,11 +70,11 @@ function! opengrok#exec(class, params) abort
 endfunction
 
 function! opengrok#search(type, pattern) abort
-    if !s:check_indexed()
+    let config_file = s:get_config_file_or_fail()
+    if empty(config_file)
         return []
     endif
-    let root = opengrok#find_index_root_dir()
-    let params = ["-R " . root . "/" . s:opengrok_cfg,
+    let params = ["-R " . config_file,
                 \ a:type, shellescape(a:pattern)]
     return opengrok#exec(s:opengrok_search_class, params)
 endfunction
@@ -87,7 +87,7 @@ function! opengrok#search_and_populate_loclist(type, pattern) abort
         let locations = []
         for line in lines
             let groups = matchlist(line, '\([^:]\+\):\(\d\+\)\? \[\(.*\)\]$')
-            if len(groups) == 0
+            if empty(groups)
                 continue
             endif
             let [path, lnum, text] = groups[1:3]
@@ -114,7 +114,7 @@ function! opengrok#search_command(type, pattern) abort
         return
     endif
     let type = a:type
-    if len(type) == 0
+    if empty(type)
         let type = "f"
     elseif len(type) > 1
         let type = type[0]
@@ -160,7 +160,7 @@ function! opengrok#reindex()
     if !s:check_opengrok_jar() || !s:check_indexed()
         return
     endif
-    let root = opengrok#find_index_root_dir()
+    let root = s:find_index_root_dir()
     call opengrok#index_dir(root)
 endfunction
 
@@ -194,7 +194,7 @@ endfunction
 " opengrok-mode
 "
 function! opengrok#og_mode_search(type) abort
-    if !s:check_opengrok_jar() || !s:check_indexed()
+    if !s:check_opengrok_jar() || empty(s:get_config_file_or_fail())
         return
     endif
     let modes = {
@@ -205,12 +205,12 @@ function! opengrok#og_mode_search(type) abort
                 \ }
     let text = get(modes, a:type)
     let pattern = input(text . ": ")
-    if len(pattern) == 0
+    if empty(pattern)
         call s:show_error("Command cancelled")
         return
     endif
     let results = opengrok#search("-" . a:type, pattern)
-    if len(results) == 0
+    if empty(results)
         return
     endif
     let lastline = line('$')
@@ -247,7 +247,7 @@ endfunction
 function! opengrok#og_mode_jump(mode) abort
     let line = getline('.')
     let groups = matchlist(line, '\([^:]\+\)|\(\(\d\+\) col \(\d\+\)\)\?| \(.*\)$')
-    if len(groups) == 0
+    if empty(groups)
         return
     endif
     let [path, _, lnum, col] = groups[1:4]
@@ -283,19 +283,18 @@ let s:og_mode_help_text = [
 function! s:help() abort
     let lastline = line('$')
     call append(lastline, s:og_mode_help_text)
-    let root = opengrok#find_index_root_dir()
-    if len(root) == 0
-        let root = "No Index!"
+    let config_file = s:get_config_file_or_fail()
+    if empty(config_file)
+        let config_file = "No configuration file found!"
     endif
     let headers = [
                 \ '" Opengrok Mode',
-                \ '" Indexed directory: ' . root,
+                \ '" Configuration file: ' . config_file,
                 \ '" Working directory: ' . getcwd(),
                 \ ]
     call append(lastline, headers)
     call cursor(lastline + 1, 0)
     exec "normal! z\<cr>"
-    call s:check_indexed()
 endfunction
 
 function! opengrok#og_mode_help() abort
@@ -338,14 +337,35 @@ function! s:set_mappings() abort
 endfunction
 
 function! s:check_indexed()
-    let root = opengrok#find_index_root_dir()
-    if len(root) == 0
+    let root = s:find_index_root_dir()
+    if empty(root)
         call s:show_error("Current directory not indexed. "
                     \ . "Use :OgIndex command to create the index in "
                     \ . "the root directory of your project")
         return 0
     endif
     return 1
+endfunction
+
+function! s:get_config_file_or_fail()
+    let config_file = get(g:, "opengrok_config_file", '')
+    let root = s:find_index_root_dir()
+    if len(root) > 0
+        let config_file = root . "/" . s:opengrok_cfg
+    endif
+    if empty(config_file)
+        call s:show_error("No configuration file found. "
+                    \ . "Use :OgIndex command to create the index in "
+                    \ . "the root directory of your project "
+                    \ . "or define g:opengrok_config_file in your "
+                    \ . ".vimrc file.")
+        return ''
+    endif
+    if !filereadable(fnamemodify(config_file, ':p'))
+        call s:show_error(config_file . " is not readable")
+        return ''
+    endif
+    return config_file
 endfunction
 
 let s:og_mode_buf_name = '[OpenGrok]'
