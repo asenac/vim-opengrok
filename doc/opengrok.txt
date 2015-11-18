@@ -1,0 +1,93 @@
+*opengrok.txt*  vim-opengrok: opengrok interface for vim
+
+==============================================================================
+CONTENTS                                                    *opengrok-contents*
+
+    1. Introduction............................|opengrok-introduction|
+    2. Configuration...........................|opengrok-configuration|
+    3. Commands................................|opengrok-commands|
+
+==============================================================================
+INTRODUCTION                                            *opengrok-introduction*
+
+|vim-opengrok| allows you to navigate through your project by querying an index
+created with Opengrok. However, it does not require to have an Opengrok
+instance deployed running in a Tomcat server. It can use either an externally
+created index, for example, created by a cron job, or an internally managed
+index created and updated by using |:OgIndex| and |:OgReindex| commands
+respectively.
+
+|vim-opengrok| provides two different ways of making queries. |:OgSearch|,
+|:OgSearchCWord| and |:OgSearchFile| display the results in Vim's location
+list. |:OgMode| opens an special buffer with some shortcuts defined and allows
+you to keep the result of several queries in the same buffer.
+
+Another difference between |:OgMode| buffer and Vim's location list is that in
+the former the search term appears highlighted in the results.
+
+==============================================================================
+CONFIGURATION                                          *opengrok-configuration*
+
+Once you have installed |vim-opengrok| using your favorite package manager, it
+requires you to add at least one line to your vimrc file to specify the
+location of Opengrok's Jar file by defining |g:opengrok_jar| global variable
+as follows:
+
+    let g:opengrok_jar = '/path/to/opengrok/lib/opengrok.jar'
+
+As stated in the introduction, |vim-opengrok| can use both internal and
+external indexes. Internal indexes, index created and updated by using
+|:OgIndex| and |:OgReindex| commands respectively, require you to define
+|g:opengrok_ctags| in your vimrc pointing to the location of the Exuberant
+Ctags exectuable as follows:
+
+    let g:opengrok_ctags = '/path/to/ctags'
+
+For using an externally managed index you need to speficy the location of its
+configuration file with |g:opengrok_config_file|. For example, if you have
+an Opengrok instance running in a Tomcat server, with a crob job configured
+to update the index, and you want to make |vim-opengrok| use the same index as
+Opengrok's web application, you can do it by adding the following line to your
+vimrc file:
+
+    let g:opengrok_config_file = '/var/opengrok/etc/configuration.xml'
+
+Note: change the path above if you have installed opengrok on a different
+location.
+
+==============================================================================
+COMMANDS                                                    *opengrok-commands*
+
+:OgSearch {querytype}                                               *:OgSearch*
+    Displays a prompt to introduce the text that will be searched and displays
+    the results in Vim's location list.
+
+:OgSearchCWord {querytype}                                     *:OgSearchCWord*
+    Searches the word under the cursor and displays the results in Vim's
+    location list.
+
+:OgSearchFile {file}                                            *:OgSearchFile*
+    Searches a file named {file} in the index.
+
+:OgMode                                                               *:OgMode*
+    Opens a special buffer to make queries by using the shortcuts defined. Use
+    '?' to display the help text.
+
+:OgIndex {directory}                                                 *:OgIndex*
+    Uses Opengrok's command line tool to index the content of {directory}. The
+    index is created under a directory called .opengrok within {directory}.
+    Use |:OgReindex| to update it.
+
+:OgReIndex                                                         *:OgReIndex*
+    Updates an index created with |:OgIndex|.
+
+                                                         *opengrok-query-types*
+In the commands that take a {querytype}, this can be one of:
+
+     Query Type    Purpose~
+     fulltext      For full text search
+     definition    For definition search
+     reference     For symbol references search
+     path          For file path search
+
+vim:ft=help
