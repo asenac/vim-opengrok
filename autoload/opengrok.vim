@@ -309,7 +309,7 @@ endfunction
 function! opengrok#og_mode_clear() abort
     setlocal modifiable
     let s:og_mode_cached_results = []
-    normal! ggVGG"_d
+    silent normal! ggVGG"_d
     call s:help()
     exe "1d"
     setlocal nomodifiable
