@@ -193,6 +193,8 @@ endfunction
 "
 " opengrok-mode
 "
+let s:og_mode_cached_results = []
+
 function! opengrok#og_mode_search(type) abort
     if !s:check_opengrok_jar() || empty(s:get_config_file_or_fail())
         return
@@ -238,6 +240,7 @@ function! opengrok#og_mode_search(type) abort
         endif
         call add(to_append, line)
     endfor
+    let s:og_mode_cached_results += to_append
     call append(line('$'), to_append)
     call cursor(lastline + 1, 0)
     exec "normal! z\<cr>"
@@ -305,6 +308,7 @@ endfunction
 
 function! opengrok#og_mode_clear() abort
     setlocal modifiable
+    let s:og_mode_cached_results = []
     normal! ggVGG"_d
     call s:help()
     exe "1d"
@@ -382,7 +386,14 @@ endfunction
 function s:buf_enter()
     set filetype=opengrok
     if line('$') == 1 && col('$') == 1
-        call opengrok#og_mode_clear()
+        setlocal modifiable
+        call s:help()
+        exe "1d"
+
+        let lastline = line('$')
+        call append(line('$'), s:og_mode_cached_results)
+        call cursor(lastline + 1, 0)
+        setlocal nomodifiable
     endif
 endfunction
 
@@ -391,8 +402,17 @@ function! opengrok#og_mode()
         return
     endif
 
-    let name = s:get_buf_name()
-    execute "silent keepjumps hide edit" . name
+    let l:name = s:get_buf_name()
+
+    " re-use existing window
+    let l:wnr = bufwinnr(l:name)
+    if l:wnr != -1 && l:wnr != winnr()
+        echomsg "bla ". l:wnr. " " . winnr()
+        exe l:wnr . "wincmd w"
+        return
+    endif
+
+    execute "silent keepjumps hide edit" . l:name
     setlocal
                 \ buftype=nofile
                 \ nocursorcolumn
