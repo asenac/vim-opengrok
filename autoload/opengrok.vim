@@ -406,11 +406,11 @@ function! opengrok#og_mode(height)
 
     " re-use existing window
     let l:wnr = bufwinnr(l:name)
-    if l:wnr != -1 && l:wnr != winnr()
+    if l:wnr != -1
         exe l:wnr . "wincmd w"
-    else
-        split
-        wincmd j
+    elseif l:wnr != winnr()
+        vsplit
+        wincmd J
         execute "silent keepjumps hide edit" . l:name
         setlocal
                     \ buftype=nofile
