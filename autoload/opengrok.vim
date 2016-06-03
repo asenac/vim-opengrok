@@ -397,7 +397,7 @@ function s:buf_enter()
     endif
 endfunction
 
-function! opengrok#og_mode()
+function! opengrok#og_mode(height)
     if &insertmode || !s:check_opengrok_jar()
         return
     endif
@@ -407,22 +407,26 @@ function! opengrok#og_mode()
     " re-use existing window
     let l:wnr = bufwinnr(l:name)
     if l:wnr != -1 && l:wnr != winnr()
-        echomsg "bla ". l:wnr. " " . winnr()
         exe l:wnr . "wincmd w"
-        return
+    else
+        split
+        wincmd j
+        execute "silent keepjumps hide edit" . l:name
+        setlocal
+                    \ buftype=nofile
+                    \ nocursorcolumn
+                    \ noswapfile
+                    \ nowrap
+
+        call s:set_mappings()
+        call s:buf_enter()
+        setlocal nomodifiable nomodified
+        let s:og_mode_running = 1
     endif
 
-    execute "silent keepjumps hide edit" . l:name
-    setlocal
-                \ buftype=nofile
-                \ nocursorcolumn
-                \ noswapfile
-                \ nowrap
-
-    call s:set_mappings()
-    call s:buf_enter()
-    setlocal nomodifiable nomodified
-    let s:og_mode_running = 1
+    if !empty(a:height)
+        exe "res " . a:height
+    endif
 endfunction
 
 aug OpengrokAug

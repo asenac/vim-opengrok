@@ -14,7 +14,7 @@ command! -nargs=? -complete=customlist,opengrok#complete_search_mode
 command! -nargs=1 OgSearchFile call opengrok#search_command('p', <q-args>)
 command! -nargs=1 -complete=dir OgIndex call opengrok#index_dir(<q-args>)
 command! -nargs=0 OgReindex call opengrok#reindex()
-command! -nargs=0 OgMode call opengrok#og_mode()
+command! -nargs=? OgMode call opengrok#og_mode(<q-args>)
 
 " restore 'cpo'
 let &cpo = s:cpo_save
