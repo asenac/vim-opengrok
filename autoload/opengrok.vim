@@ -409,9 +409,7 @@ function! opengrok#og_mode(height)
     if l:wnr != -1
         exe l:wnr . "wincmd w"
     elseif l:wnr != winnr()
-        vsplit
-        wincmd J
-        execute "silent keepjumps hide edit" . l:name
+        execute "silent keepjumps hide keepa bo new" . l:name
         setlocal
                     \ buftype=nofile
                     \ nocursorcolumn
