@@ -409,17 +409,21 @@ function! opengrok#og_mode(height)
     if l:wnr != -1
         exe l:wnr . "wincmd w"
     elseif l:wnr != winnr()
-        execute "silent keepjumps hide keepa bo new" . l:name
-        setlocal
-                    \ buftype=nofile
-                    \ nocursorcolumn
-                    \ noswapfile
-                    \ nowrap
+        let l:bn = bufnr(l:name)
+        if l:bn == -1
+            execute "silent keepjumps hide keepa bo new" . l:name
+            setlocal
+                        \ buftype=nofile
+                        \ nocursorcolumn
+                        \ noswapfile
+                        \ nowrap
 
-        call s:set_mappings()
-        call s:buf_enter()
-        setlocal nomodifiable nomodified
-        let s:og_mode_running = 1
+            call s:set_mappings()
+            call s:buf_enter()
+            setlocal nomodifiable nomodified
+        else
+            execute "silent keepjumps keepa bo sb" . l:bn
+        endif
     endif
 
     if !empty(a:height)
